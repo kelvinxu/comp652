@@ -1,0 +1,130 @@
+% --------------------------------------------------------------
+% This is all preamble stuff that you don't have to worry about.
+% Head down to where it says "Start here"
+% --------------------------------------------------------------
+
+\documentclass[12pt]{article}
+
+
+\usepackage[margin=1in]{geometry} 
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage[procnames]{listings}
+\usepackage{float}
+\usepackage{color}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\begin{document}
+
+% --------------------------------------------------------------
+%                         Start here
+% --------------------------------------------------------------
+
+\title{Assignment 1}%replace X with the appropriate number
+\author{Kelvin Xu\\ %replace with your name
+COMP652} %if necessary, replace with your course title
+
+\maketitle
+\begin{problem}{1. (a)}
+See function load\_data
+\end{problem}
+
+\begin{problem}{1. (b)}
+With each datacase as a row
+\end{problem}
+\begin{align*}
+    Xw &= Y 
+\end{align*}
+By doing this, we can see that we are not changing any of the decision
+boundaries. We are just are only effecting the regression coefficients, and
+their corresponding intepretation. This approach also has the added advantage
+that it can help avoid numerical instabilities.
+
+Finally, normalization of this type, and other similar normalization schemes
+helps make the model invariant to parameterization. For example, the ridge
+regression classifier will have very different weights for the same data
+shifted around because the penalty will shrink the weight matrix
+often at the expense of accuracy. 
+
+\begin{problem}{1. (c)}
+See function polyRegress 
+\end{problem}
+
+\begin{problem}{1. (d)}
+See function cross\_valid\_regress 
+\end{problem}
+
+\begin{problem}{1. (e)}
+\end{problem}
+
+\begin{problem}{1. (f)}
+\end{problem}
+
+\begin{problem}{2.}
+Writing out the log-likelihood:
+\end{problem}
+\[
+    L = \prod_{i=1}^{m} P(y_i \mid x_i ; h ) P(x_i)
+\]
+We are interested in the argmax of this value, we 
+also take a log which doesn't change the argmax since it 
+is a monotonically increasing function.
+\begin{align*}
+    \argmax_w L &= \argmax \log l \\
+    l &= \sum_{i=1}^{m} \log P(y_i \mid x_i ; w ) + \log P(x_i)
+\end{align*}
+Discarding the $P(x_i)$ term since it does not depend on w.
+\begin{align*}
+    l &= \sum_{i=1}^{m} \log P(y_i \mid x_i ; w ) \\
+      &= \sum_{i=1}^{m} \log \Bigg( \frac{1}{\sqrt{2\pi\sigma_i^2}} \exp \Big(-\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big) \Bigg) \\ 
+      &= \sum_{i=1}^{m} \log \Big( \frac{1}{\sqrt{2\pi\sigma_i^2}} \Big) - \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
+\end{align*}
+Dropping the first term since it has no dependence on w
+\begin{align*}
+    l  &= -\sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
+\end{align*}
+We can see here that maximizing this quantity is equivalent to minimizing
+\begin{align*}
+    l  &= \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
+\end{align*}
+Taking a derivative with respect to W gives:
+\begin{align*}
+    \frac{\partial l}{\partial w} &= \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
+                                  &= \sum_{i=1}^{m} \Big(\frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
+\end{align*}
+
+\begin{problem}{3. (a)}
+\end{problem}
+
+\begin{problem}{3. (b)}
+\end{problem}
+
+\begin{problem}{3. (c)}
+\end{problem}
+
+\begin{problem}{4.}
+\end{problem}
+% --------------------------------------------------------------
+%     You don't have to mess with anything below this line.
+% --------------------------------------------------------------
+
+\end{document}
