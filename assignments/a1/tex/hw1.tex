@@ -86,7 +86,7 @@ Writing out the log-likelihood:
     L = \prod_{i=1}^{m} P(y_i \mid x_i ; h ) P(x_i)
 \]
 We are interested in the argmax of this value, we 
-also can take a log which doesn't change the argmax since it 
+also can take a log which doesn't change the argmax since log
 is a monotonically increasing function.
 \begin{align*}
     \argmax_w L &= \argmax \log l \\
@@ -110,24 +110,58 @@ Assuming our hypothesis is a linear classifier $h_w(X) = Xw$
 \begin{align*}
     l &= \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - x_i \cdot w)^2}{\sigma_i^2} \Big)\\
 \end{align*} 
-We can get the following by writing our expression in matrix form, letting $\sigma$ be
-a diagonal matrix containing our required values. 
+We can get the following by writing our expression in matrix form, letting $\mathbf{\sigma}$ be
+a diagonal matrix containing with entries $\frac{1}{\sigma_i}$.  
 \begin{align*}
-    l &= \Big((y - Xw)^T \sigma (Xw - y) \Big)\\
+    l &= \Big((Xw - y)^T \mathbf{\sigma} (y - Xw) \Big)\\
 \end{align*}
 Expanding, 
 \begin{align*}
-    l &= \Big((Xw - y)^T \sigma (Xw - y) \Big)\\
+    l &= \Big((Xw - y)^T \mathbf{\sigma} (Xw - y) \Big)\\
+      &= \Big((w^T X^T \mathbf{\sigma} - y^T \mathbf{\sigma})(Xw - y) \Big)\\
+      &= \Big((w^T X^T \mathbf{\sigma} Xw - y^T \mathbf{\sigma} Xw - w^T X^T \mathbf{\sigma}y + y^T \mathbf{\sigma} y) \Big)\\
 \end{align*}
+Finally taking a gradient
+\begin{align*}
+    \vec\nabla_{w} l &= 2 X^T \sigma X w - 2X^T \sigma Y  \\ 
+\end{align*}
+Setting to zero, 
+\begin{gather*}
+     0 = 2 X^T \sigma X w - 2X^T \sigma Y  \\ 
+     0 =  X^T \sigma X w - X^T \sigma Y  \\ 
+     X^T \sigma X w = X^T \sigma Y  \\ 
+      w = (X^T \sigma X)^{-1} X^T \sigma Y  \\ 
+\end{gather*}
+
+This can be intepreted as a type of weighted least squares. 
 
 \begin{problem}{3. (a)}
-
+Given the loss function as defined
+\[
+        L_H(w,\delta) = 
+                \begin{cases} 
+                (y_i - w^T x_i)^2 / 2 ,  \text{if} \mid y_i - w^T x_i y \mid \leq \delta \\ 
+                \delta \mid  y_i - w^T x_i  \mid - \delta^2 /2, \text{otherwise}
+                \end{cases}
+\]
 \end{problem}
+
+As we have a piecewise loss function, we will also have a piece-wise gradient.
+\[
+        \vec \nabla_w L_H(w,\delta) = 
+                \begin{cases} 
+                (y_i - w^T x_i) x_i ,  \text{if} \mid y_i - w^T x_i y \mid \leq \delta \\ 
+                \text{sign}(-y_i + w^T x_i)x_i , \text{otherwise} 
+                \end{cases}
+\]
 
 \begin{problem}{3. (b)}
 \end{problem}
+To optimize this loss, we can just use a gradient based method getting the gradient for
+each example and averaging the entire gradient for each update.
 
 \begin{problem}{3. (c)}
+See code
 \end{problem}
 
 \begin{problem}{4.}
@@ -137,8 +171,19 @@ Writing out the likelihood function:
 \[
     L = \prod_{i=1}^{m} P(y_i \mid x_i ; h ) P(x_i)
 \]
-Following the same line of reasoning up to the..
+Again, taking the log and and dropping the $P(x_i)$ term. Assuming we are in the same settings
+(regression, gaussian noising), using the form of the hypothesis suggested.
+\begin{align*}
+    l &= \sum_{i=1}^{m} \log ( \frac{1}{\sqrt{2\pi\sigma_i^2}} \exp \Big(-\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big))) \\
+      &= -\sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - \prod_k^K \phi_k(x) )^2}{\sigma^2} \Big) \\
+      &= -\sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - \prod_k^K \exp(w_k^T \cdot x) )^2}{\sigma^2} \Big)\\
+\end{align*}
+Taking a derivative, 
+\begin{align*}
+    \vec\nabla_{w_k} l  &= -\sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - \prod_k^K \exp(w_k^T \cdot x))}{\sigma^2} \cdot x  \Big)\\ 
+\end{align*}
 
+We can use a gradient based update to for each of the basis functions to optimize the value of this function.
 
 % --------------------------------------------------------------
 %     You don't have to mess with anything below this line.

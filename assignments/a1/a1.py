@@ -42,7 +42,10 @@ def polyRegress(x, d=2):
     
 
 def get_error(X, y, w):
-    y_pred = np.dot(X,w)
+    if isinstance(w, sklearn.linear_model.ridge.Ridge):
+        y_pred = w.predict(X)
+    else:
+        y_pred = np.dot(X,w)
     return ((y_pred - y)**2).sum() * 1. / y.shape[0]
     
 
@@ -62,18 +65,19 @@ def Regress_exact(X, y, alpha=0.0):
     return clf
 
 
-def Regress_gradient(x, y, x_val, y_val, max_iter=10000, alpha=0.0, patience=10):
+def Regress_gradient(x, y, x_val, y_val, max_iter=10000, alpha=0.0, patience=20):
     """
     Implements gradient based optimization
     for least squares
 
     x - num examples by features
     y - num examples x 1
+    patience - the number of updates to weight to see if the loss goes down 
 
     returns w: features x 1
     """
     w = np.random.randn(x.shape[1],)
-    lr = 0.01
+    lr = 0.0001
 
     gradient = lambda w, x, y : np.dot(np.dot(x.T, x), w) - np.dot(x.T, y).T + alpha * w
 
@@ -95,17 +99,17 @@ def Regress_gradient(x, y, x_val, y_val, max_iter=10000, alpha=0.0, patience=10)
     return best_w, get_error(x, y, w), get_error(x_val, y_val, w)
 
 
-def cross_valid_regress(x=None, y=None, alpha=0.):
+def cross_valid_regress(x=None, y=None, alpha=0., d=5, n_folds=5):
     """
     (d)
     """
-
     if x is None or y is None:
         x, y = load_data(normalize=True)
     # already shuffled on load
-    kf = KFold(len(x), n_folds=5, shuffle=False)
-    errors = np.zeros((5, 3, 5))
-    for dd in range(1,6):
+    kf = KFold(len(x), n_folds=n_folds, shuffle=False)
+    # error is #degrees by # entries by # folds
+    errors = np.zeros((n_folds, 3, d))
+    for dd in range(1,d+1):
         for i, (train_val, test_idx) in enumerate(kf):
             # train, val, test
             dataset = [train_val[:-20], train_val[-20:], test_idx]
@@ -115,14 +119,14 @@ def cross_valid_regress(x=None, y=None, alpha=0.):
             # compute test
             test_err = get_error(polyRegress(x[dataset[2]], dd), y[dataset[2]], w)
             errors[dd-1, :, i] = np.array([train_err, val_err, test_err])
-    print "Tried d = %d.." % dd
-    # average across each iteration
+        print "Tried d = %d.." % dd
+    # average across each fold
     best_class = errors.mean(axis=2)[:,2].argmin() + 1
     best_hypothesis = Regress_exact(polyRegress(x, best_class), y)
     return errors, best_class, best_hypothesis
 
 
-def cross_valid_regularize(x=None, y=None):
+def cross_valid_regularize(x=None, y=None, exact=False):
     """
     (f)
     """
@@ -131,11 +135,15 @@ def cross_valid_regularize(x=None, y=None):
     # already shuffled on load
     x = polyRegress(x, 4)
     kf = KFold(len(x), n_folds=5, shuffle=False)
-    test_lambda = [0.001, 0.01, 0.05, 0.1, 0.5, 1, 2, 10]
+    test_lambda = [0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 10]
     errors = np.zeros((len(test_lambda), 2, 5))
     for l_idx, l in enumerate(test_lambda):
         for ii, (train_idx, test_idx) in enumerate(kf):
-            w, _, _ = Regress_gradient(x[train_idx], y[train_idx], x[test_idx], y[test_idx], alpha=l)
+            if exact:
+                w = Regress_exact(x[train_idx], y[train_idx], alpha=l)
+            else:
+                w = Regress_gradient(x[train_idx], y[train_idx], x[test_idx], y[test_idx], alpha=l)
+                w = w[0]
             errors[l_idx,:, ii] = np.array([get_error(x[idx], y[idx], w)
                                           for idx in [train_idx, test_idx]])
     return errors
