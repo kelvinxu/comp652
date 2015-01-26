@@ -86,7 +86,7 @@ Writing out the log-likelihood:
     L = \prod_{i=1}^{m} P(y_i \mid x_i ; h ) P(x_i)
 \]
 We are interested in the argmax of this value, we 
-also take a log which doesn't change the argmax since it 
+also can take a log which doesn't change the argmax since it 
 is a monotonically increasing function.
 \begin{align*}
     \argmax_w L &= \argmax \log l \\
@@ -106,13 +106,22 @@ We can see here that maximizing this quantity is equivalent to minimizing
 \begin{align*}
     l  &= \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
 \end{align*}
-Taking a derivative with respect to W gives:
+Assuming our hypothesis is a linear classifier $h_w(X) = Xw$
 \begin{align*}
-    \frac{\partial l}{\partial w} &= \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
-                                  &= \sum_{i=1}^{m} \Big(\frac{(y_i - h_w(x_i))^2}{\sigma_i^2} \Big)
+    l &= \sum_{i=1}^{m} \Big(\frac{1}{2} \frac{(y_i - x_i \cdot w)^2}{\sigma_i^2} \Big)\\
+\end{align*} 
+We can get the following by writing our expression in matrix form, letting $\sigma$ be
+a diagonal matrix containing our required values. 
+\begin{align*}
+    l &= \Big((y - Xw)^T \sigma (Xw - y) \Big)\\
+\end{align*}
+Expanding, 
+\begin{align*}
+    l &= \Big((Xw - y)^T \sigma (Xw - y) \Big)\\
 \end{align*}
 
 \begin{problem}{3. (a)}
+
 \end{problem}
 
 \begin{problem}{3. (b)}
@@ -122,7 +131,15 @@ Taking a derivative with respect to W gives:
 \end{problem}
 
 \begin{problem}{4.}
+Taking the hypothesis to be the product of those basis functions as provided
 \end{problem}
+Writing out the likelihood function:
+\[
+    L = \prod_{i=1}^{m} P(y_i \mid x_i ; h ) P(x_i)
+\]
+Following the same line of reasoning up to the..
+
+
 % --------------------------------------------------------------
 %     You don't have to mess with anything below this line.
 % --------------------------------------------------------------

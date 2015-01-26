@@ -1,6 +1,4 @@
 """
-Assignment 1 for COMP652
-
 Kelvin Xu
 01/17/2014
 """
@@ -41,24 +39,14 @@ def polyRegress(x, d=2):
     for dd in xrange(0, d):
         xx[:, dd*n_feats:(dd+1)*n_feats] = x[:, :-1]**(dd+1)
     return xx
-
-
-def Regress_gradient(x, y, x_val=None, y_val=None, alpha=0.0):
-    """
-    Implements gradient based optimization
-    for least squares
-
-    x - num examples by features 
-    y - num examples x 1
     
-    returns w: features x 1
-    """ 
-    w = numpy.randn(X.shape[1], 1)
-    lr = 0.1
-    lambda gradient w, x, y : np.dot(np.dot(x.T, x), w) - np.dot(x.T, y) + alpha * w   
-    # TODO 
 
-def Regress(X, y, alpha=0.0):
+def get_error(X, y, w):
+    y_pred = np.dot(X,w)
+    return ((y_pred - y)**2).sum() * 1. / y.shape[0]
+    
+
+def Regress_exact(X, y, alpha=0.0):
     """
     Ridge regression with sklearn,
     Alpha is the regularization parameter
@@ -73,13 +61,42 @@ def Regress(X, y, alpha=0.0):
     clf.fit(X, y)
     return clf
 
-def get_error(x, y, clf):
-    y_pred = clf.predict(x)
-    return ((y_pred - y)**2).sum() * 1. / y.shape[0]
+
+def Regress_gradient(x, y, x_val, y_val, max_iter=10000, alpha=0.0, patience=10):
+    """
+    Implements gradient based optimization
+    for least squares
+
+    x - num examples by features
+    y - num examples x 1
+
+    returns w: features x 1
+    """
+    w = np.random.randn(x.shape[1],)
+    lr = 0.01
+
+    gradient = lambda w, x, y : np.dot(np.dot(x.T, x), w) - np.dot(x.T, y).T + alpha * w
+
+    history_err = []
+
+    for i in range(0, max_iter):
+        dw = gradient(w, x, y)
+        w -= lr * dw
+        train_error = get_error(x, y, w)
+        val_error = get_error(x_val, y_val, w)
+        history_err.append([train_error, val_error])
+        if i == 0 or val_error < np.array(history_err)[:,1].min():
+            best_w = w
+            bad_counter = 0
+        if i > patience and val_error >= np.array(history_err)[:-patience,1].min():
+            bad_counter += 1
+            if bad_counter > patience:
+                break
+    return best_w, get_error(x, y, w), get_error(x_val, y_val, w)
+
 
 def cross_valid_regress(x=None, y=None, alpha=0.):
     """
-    This doesn't really make sense
     (d)
     """
 
@@ -93,15 +110,19 @@ def cross_valid_regress(x=None, y=None, alpha=0.):
             # train, val, test
             dataset = [train_val[:-20], train_val[-20:], test_idx]
             # fit on train
-            clf = Regress(polyRegress(x[dataset[0]], dd), y[dataset[0]])
-            errors[dd-1, :, i] = np.array([get_error(polyRegress(x[idx], dd), y[idx], clf)
-                                           for idx in dataset])
-    # avereage across each iteration
+            w, train_err, val_err = Regress_gradient(polyRegress(x[dataset[0]], dd), y[dataset[0]],
+                                                       polyRegress(x[dataset[1]], dd), y[dataset[1]])
+            # compute test
+            test_err = get_error(polyRegress(x[dataset[2]], dd), y[dataset[2]], w)
+            errors[dd-1, :, i] = np.array([train_err, val_err, test_err])
+    print "Tried d = %d.." % dd
+    # average across each iteration
     best_class = errors.mean(axis=2)[:,2].argmin() + 1
-    best_hypothesis = Regress(polyRegress(x, best_class), y)
-    return errors, best_hypothesis
+    best_hypothesis = Regress_exact(polyRegress(x, best_class), y)
+    return errors, best_class, best_hypothesis
 
-def cross_valid_reg(x=None, y=None, alpha=0.):
+
+def cross_valid_regularize(x=None, y=None):
     """
     (f)
     """
@@ -111,11 +132,10 @@ def cross_valid_reg(x=None, y=None, alpha=0.):
     x = polyRegress(x, 4)
     kf = KFold(len(x), n_folds=5, shuffle=False)
     test_lambda = [0.001, 0.01, 0.05, 0.1, 0.5, 1, 2, 10]
-    errors = np.zeros((len(test_lambda, 5)))
+    errors = np.zeros((len(test_lambda), 2, 5))
     for l_idx, l in enumerate(test_lambda):
-        for ii, (train_idx, test_idx) in enumerate(kf): 
-            clf = Regression(x[train_idx], y[train_indx])
-            
-            errors[l_idx, ii] = np.array([get_error(x[idx], y[idx], clf) 
+        for ii, (train_idx, test_idx) in enumerate(kf):
+            w, _, _ = Regress_gradient(x[train_idx], y[train_idx], x[test_idx], y[test_idx], alpha=l)
+            errors[l_idx,:, ii] = np.array([get_error(x[idx], y[idx], w)
                                           for idx in [train_idx, test_idx]])
     return errors
