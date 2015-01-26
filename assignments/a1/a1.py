@@ -82,10 +82,13 @@ def Regress_gradient(x, y, x_val, y_val, max_iter=10000, alpha=0.0, patience=20)
     gradient = lambda w, x, y : np.dot(np.dot(x.T, x), w) - np.dot(x.T, y).T + alpha * w
 
     history_err = []
+    w_delta = 0
 
     for i in range(0, max_iter):
+        w_old = w
         dw = gradient(w, x, y)
-        w -= lr * dw
+        w += -lr * dw + 0.9 * w_delta
+        w_delta = w - w_old
         train_error = get_error(x, y, w)
         val_error = get_error(x_val, y_val, w)
         history_err.append([train_error, val_error])
